@@ -38,6 +38,6 @@ public class WemediaClient implements IWemediaClient {
     @Override
     @GetMapping("/api/v1/channel/list")
     public ResponseResult getChannels() {
-        return ResponseResult.okResult(wmChannelService.findAll());
+        return wmChannelService.findAll();
     }
 }

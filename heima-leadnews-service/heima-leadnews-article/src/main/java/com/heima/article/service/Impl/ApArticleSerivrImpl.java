@@ -1,5 +1,6 @@
 package com.heima.article.service.Impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.heima.article.mapper.ApArticleConfigMapper;
@@ -8,11 +9,13 @@ import com.heima.article.mapper.ApArticleMapper;
 import com.heima.article.service.ApArticleSerive;
 import com.heima.article.service.ArticleFreemarkerService;
 import com.heima.common.constants.ArticleConstants;
+import com.heima.common.redis.CacheService;
 import com.heima.model.article.dtos.ArticleDto;
 import com.heima.model.article.dtos.ArticleHomeDto;
 import com.heima.model.article.pojos.ApArticle;
 import com.heima.model.article.pojos.ApArticleConfig;
 import com.heima.model.article.pojos.ApArticleContent;
+import com.heima.model.article.vos.HotArticleVo;
 import com.heima.model.common.dtos.ResponseResult;
 import com.heima.model.common.enums.AppHttpCodeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,9 @@ import java.util.Map;
 @Transactional
 @Slf4j
 public class ApArticleSerivrImpl extends ServiceImpl<ApArticleMapper, ApArticle> implements ApArticleSerive {
+
+    @Autowired
+    private CacheService cacheService;
 
     @Autowired
     private ApArticleMapper apArticleMapper;
@@ -76,6 +82,8 @@ public class ApArticleSerivrImpl extends ServiceImpl<ApArticleMapper, ApArticle>
         List<ApArticle> apArticleList = apArticleMapper.loadArticleList(dto, type);
         return ResponseResult.okResult(apArticleList);
     }
+
+
 
     /**
      * 保存app端相关文章
@@ -125,6 +133,27 @@ public class ApArticleSerivrImpl extends ServiceImpl<ApArticleMapper, ApArticle>
 
         //3.结果返回  文章的id
         return ResponseResult.okResult(apArticle.getId());
+    }
+
+    /**
+     * 加载文章列表
+     *
+     * @param dto
+     * @param type
+     * @param firstPage
+     * @return
+     */
+    @Override
+    public ResponseResult load2(ArticleHomeDto dto, Short type, Boolean firstPage) {
+        if(firstPage){
+            String jsonStr = cacheService.get(ArticleConstants.HOT_ARTICLE_FIRST_PAGE + dto.getTag());
+            if(StringUtils.isNotBlank(jsonStr)){
+                List<HotArticleVo> hotArticleVoList = JSON.parseArray(jsonStr, HotArticleVo.class);
+                return ResponseResult.okResult(hotArticleVoList);
+            }
+        }
+
+        return load(dto,type);
     }
 
 

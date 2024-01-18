@@ -5,6 +5,7 @@ import com.heima.apis.wemedia.IWemediaClient;
 import com.heima.article.mapper.ApArticleMapper;
 import com.heima.article.service.HotArticleService;
 import com.heima.common.constants.ArticleConstants;
+import com.heima.common.redis.CacheService;
 import com.heima.model.article.pojos.ApArticle;
 import com.heima.model.article.vos.HotArticleVo;
 import com.heima.model.common.dtos.ResponseResult;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,12 +35,15 @@ public class HotArticleServiceImpl implements HotArticleService {
 
     @Autowired
     private IWemediaClient wemediaClient;
+
+    @Autowired
+    private CacheService cacheService;
     /**
      * 计算热点文章
      */
     @Override
     public void computHotArticle() {
-        Date date = DateTime.now().minusDays(5).toDate();
+        Date date = DateTime.now().minusYears(5).toDate();
         List<ApArticle> articleListByLast5Days = apArticleMapper.findArticleListByLast5Days(date);
         List<HotArticleVo> hotArticleVo = computHotArticle(articleListByLast5Days);
 
@@ -48,14 +53,31 @@ public class HotArticleServiceImpl implements HotArticleService {
     private void cacheTagToRedis(List<HotArticleVo> hotArticleVoList) {
         ResponseResult responseResult = wemediaClient.getChannels();
         if(responseResult.getCode().equals(200)){
-            String s = JSON.toJSONString(responseResult.getData());
+            Object data = responseResult.getData();
+            String s = JSON.toJSONString(data);
             List<WmChannel> wmChannels = JSON.parseArray(s, WmChannel.class);
             if(wmChannels!=null && wmChannels.size()!=0){
                 for (WmChannel wmChannel : wmChannels) {
-                    List<HotArticleVo> HotArticleVos = hotArticleVoList.stream().filter(x -> x.getChannelId().equals(wmChannel.getId())).collect(Collectors.toList());
+                    List<HotArticleVo> hotArticleVos = hotArticleVoList.stream().filter(x -> x.getChannelId().equals(wmChannel.getId())).collect(Collectors.toList());
+
+                    //文章排序取30条高的文章存入redis
+                    hotArticleVos = hotArticleVos.stream().sorted(Comparator.comparing(HotArticleVo::getScore).reversed()).collect(Collectors.toList());
+                    if(hotArticleVos.size() > 30){
+                        hotArticleVos = hotArticleVos.subList(0,30);
+                    }
+                    cacheService.set(ArticleConstants.HOT_ARTICLE_FIRST_PAGE + wmChannel.getId(),JSON.toJSONString(hotArticleVos));
+
                 }
             }
         }
+        //文章排序取30条高的文章存入redis
+        hotArticleVoList = hotArticleVoList.stream().sorted(Comparator.comparing(HotArticleVo::getScore).reversed()).collect(Collectors.toList());
+        if(hotArticleVoList.size() > 30){
+            hotArticleVoList = hotArticleVoList.subList(0,30);
+        }
+        cacheService.set(ArticleConstants.HOT_ARTICLE_FIRST_PAGE + ArticleConstants.DEFAULT_TAG,JSON.toJSONString(hotArticleVoList));
+
+
     }
 
     /**

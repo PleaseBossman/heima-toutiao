@@ -18,6 +18,13 @@ public interface ApArticleSerive extends IService<ApArticle> {
     public ResponseResult load(ArticleHomeDto dto, Short type);
 
     /**
+     * 加载文章列表
+     * @param dto
+     * @param type
+     * @return
+     */
+    public ResponseResult load2(ArticleHomeDto dto, Short type, Boolean firstPage);
+    /**
      *  保存app端相关文章
      * @param dto
      * @return
