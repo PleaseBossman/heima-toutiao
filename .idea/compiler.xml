@@ -18,6 +18,7 @@
         <module name="heima-leadnews-article" />
         <module name="heima-leadnews-admin" />
         <module name="heima-leadnews-admin-gateway" />
+        <module name="kafka-demo" />
         <module name="xxljob-demo" />
         <module name="es-init" />
         <module name="heima-leadnews-schedule" />
@@ -54,6 +55,7 @@
       <module name="heima-leadnews-utils" target="1.8" />
       <module name="heima-leadnews-wemedia" target="1.8" />
       <module name="heima-leadnews-wemedia-gateway" target="1.8" />
+      <module name="kafka-demo" target="1.8" />
       <module name="minio-demo" target="1.8" />
       <module name="mongo-demo" target="1.8" />
       <module name="xxljob-demo" target="1.8" />
@@ -64,7 +66,7 @@
       <module name="es-init" options="-parameters" />
       <module name="freemarker-demo" options="-parameters" />
       <module name="heima-file-starter" options="-parameters" />
-      <module name="heima-leadnews" options="" />
+      <module name="heima-leadnews" options="-parameters" />
       <module name="heima-leadnews-admin" options="-parameters" />
       <module name="heima-leadnews-admin-gateway" options="-parameters" />
       <module name="heima-leadnews-apis" options="-parameters" />
@@ -84,6 +86,7 @@
       <module name="heima-leadnews-utils" options="-parameters" />
       <module name="heima-leadnews-wemedia" options="-parameters" />
       <module name="heima-leadnews-wemedia-gateway" options="-parameters" />
+      <module name="kafka-demo" options="-parameters" />
       <module name="minio-demo" options="-parameters" />
       <module name="mongo-demo" options="-parameters" />
       <module name="xxljob-demo" options="-parameters" />

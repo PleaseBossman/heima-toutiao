@@ -17,6 +17,7 @@
         <module>es-init</module>
         <module>mongo-demo</module>
         <module>xxljob-demo</module>
+        <module>kafka-demo</module>
     </modules>
     <dependencies>
         <dependency>
