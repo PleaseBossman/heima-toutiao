@@ -22,7 +22,6 @@ public class ProducerQuickStart {
         prop.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,"org.apache.kafka.common.serialization.StringSerializer");
         prop.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,"org.apache.kafka.common.serialization.StringSerializer");
 
-
         //ack配置  消息确认机制
         prop.put(ProducerConfig.ACKS_CONFIG,"all");
 

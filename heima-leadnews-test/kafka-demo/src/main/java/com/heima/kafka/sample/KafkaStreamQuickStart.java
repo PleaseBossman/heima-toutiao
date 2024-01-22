@@ -26,7 +26,7 @@ public class KafkaStreamQuickStart {
         prop.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         prop.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         prop.put(StreamsConfig.APPLICATION_ID_CONFIG,"streams-quickstart");
-        prop.put(StreamsConfig.STATE_DIR_CONFIG, "C:\\IT\\tool\\kafka-state-store");//设置状态仓库的存储路径
+
         //stream 构建器
         StreamsBuilder streamsBuilder = new StreamsBuilder();
 

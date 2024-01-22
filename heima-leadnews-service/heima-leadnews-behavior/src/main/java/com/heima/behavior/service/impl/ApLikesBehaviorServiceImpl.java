@@ -47,6 +47,7 @@ public class ApLikesBehaviorServiceImpl implements ApLikesBehaviorService {
         mess.setArticleId(dto.getArticleId());
         mess.setType(UpdateArticleMess.UpdateArticleType.LIKES);
 
+
         //3.点赞  保存数据
         if (dto.getOperation() == 0) {
             Object obj = cacheService.hGet(BehaviorConstants.LIKE_BEHAVIOR + dto.getArticleId().toString(), user.getId().toString());
