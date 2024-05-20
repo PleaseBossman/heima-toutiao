@@ -19,7 +19,7 @@ public class ScheduleApplication {
         SpringApplication.run(ScheduleApplication.class,args);
     }
 
-    /**
+    /**第三方bean对象
      * mybatis-plus乐观锁支持
      * @return
      */

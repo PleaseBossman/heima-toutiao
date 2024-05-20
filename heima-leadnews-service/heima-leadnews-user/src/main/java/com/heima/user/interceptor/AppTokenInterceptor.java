@@ -2,11 +2,13 @@ package com.heima.user.interceptor;
 
 import com.heima.model.user.pojos.ApUser;
 import com.heima.utils.thread.AppThreadLocalUtil;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+@Component
 public class AppTokenInterceptor implements HandlerInterceptor {
 
     @Override
