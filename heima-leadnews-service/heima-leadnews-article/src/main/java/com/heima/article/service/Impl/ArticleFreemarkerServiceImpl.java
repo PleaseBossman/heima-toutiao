@@ -92,6 +92,7 @@ public class ArticleFreemarkerServiceImpl implements ArticleFreemarkerService {
 
     /**
      * 送消息，创建索引
+     * 创建文章的 Elasticsearch 索引数据。该方法将文章内容封装成一个 SearchArticleVo 对象，并将其转换为 JSON 字符串发送到 Kafka 的一个特定主题中，以供 Elasticsearch 消费和索引数据
      * @param apArticle
      * @param content
      * @param path

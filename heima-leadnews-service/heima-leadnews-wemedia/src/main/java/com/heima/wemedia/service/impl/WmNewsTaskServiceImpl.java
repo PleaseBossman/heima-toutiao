@@ -39,7 +39,7 @@ public class WmNewsTaskServiceImpl implements WmNewsTaskService{
         task.setPriority(TaskTypeEnum.NEWS_SCAN_TIME.getPriority());
         WmNews wmNews = new WmNews();
         wmNews.setId(id);
-        task.setParameters(ProtostuffUtil.serialize(wmNews));
+        task.setParameters(ProtostuffUtil.serialize(wmNews));//serialize(wmNews) 表示对 wmNews 对象进行序列化，将其转换成一个字节数组
         iScheduleClient.addTask(task);
         log.info("添加任务到延迟服务中----end");
     }
@@ -52,15 +52,30 @@ public class WmNewsTaskServiceImpl implements WmNewsTaskService{
      * 消费延迟队列数据
      */
     @Override
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelay = 1000)//表示任务执行完毕后，等待 1000 毫秒（1 秒）再重新执行。
     public void scanNewsByTask() {
+        // 日志输出：开始执行文章审核任务的消费
         log.info("文章审核---消费任务执行---begin---");
+
+        // 调用 `iScheduleClient` 客户端的 `poll` 方法，从延迟队列中获取任务。传入的参数是任务类型和优先级。
+        // `TaskTypeEnum.NEWS_SCAN_TIME.getTaskType()`：获取任务类型（如文章审核任务类型）
+        // `TaskTypeEnum.NEWS_SCAN_TIME.getPriority()`：获取任务的优先级
         ResponseResult responseResult = iScheduleClient.poll(TaskTypeEnum.NEWS_SCAN_TIME.getTaskType(), TaskTypeEnum.NEWS_SCAN_TIME.getPriority());
-        if(responseResult.getCode().equals(200) &&responseResult.getData()!=null){
-            Task task = JSON.parseObject(JSON.toJSONString(responseResult.getData()),Task.class);
-            WmNews wmNews = ProtostuffUtil.deserialize(task.getParameters(),WmNews.class);
+
+        // 检查请求结果，如果返回码为 200 且返回数据不为空，则表示成功获取到了任务
+        if(responseResult.getCode().equals(200) && responseResult.getData() != null) {
+            // 将返回的数据 `responseResult.getData()` 转换为 JSON 字符串，然后再解析为 `Task` 对象
+            Task task = JSON.parseObject(JSON.toJSONString(responseResult.getData()), Task.class);
+
+            // 从 `task` 对象中获取序列化的任务参数，并反序列化成 `WmNews` 对象
+            // `ProtostuffUtil.deserialize()`：使用 `ProtostuffUtil` 工具类来进行反序列化，将字节数组转换成 `WmNews` 对象
+            WmNews wmNews = ProtostuffUtil.deserialize(task.getParameters(), WmNews.class);
+
+            // 调用 `wmNewsAutoScanService` 的 `autoScanWmNews` 方法，传入 `WmNews` 对象的 ID，进行文章的自动审核
             wmNewsAutoScanService.autoScanWmNews(wmNews.getId());
         }
+
+        // 日志输出：完成执行文章审核任务的消费
         log.info("文章审核---消费任务执行---end---");
     }
 

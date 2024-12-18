@@ -38,6 +38,9 @@ public class UserRelationServiceImpl implements UserRelationService {
         }
         Integer apUserId = user.getId();
 
+        /**
+         * 用redis储存关注的关系
+         */
         //3 关注 apuser:follow:  apuser:fans:
         Integer followUserId = dto.getAuthorId();
         if (dto.getOperation() == 0) {

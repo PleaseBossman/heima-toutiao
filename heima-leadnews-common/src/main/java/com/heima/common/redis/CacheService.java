@@ -387,6 +387,14 @@ public class CacheService extends CachingConfigurerSupport {
         return stringRedisTemplate.opsForHash().multiGet(key, fields);
     }
 
+    /**
+     * key 是 Redis 中的哈希表的名字。
+     * hashKey 是这个哈希表中的字段。
+     * value 是与这个字段相关联的数据。
+     * @param key
+     * @param hashKey
+     * @param value
+     */
     public void hPut(String key, String hashKey, String value) {
         stringRedisTemplate.opsForHash().put(key, hashKey, value);
     }
@@ -523,7 +531,8 @@ public class CacheService extends CachingConfigurerSupport {
 
     /**
      * 存储在list头部
-     *
+     *lLeftPush 方法是用于在 Redis 列表类型的键（key）的头部添加一个或多个元素的操作方法。具体来说，当你使用 lLeftPush 方法时，
+     * 它会将指定的值（value）插入到列表的头部，即左边。如果该键（key）不存在，那么会创建一个新的空列表，然后再执行插入操作。如果键（key）存在但不是列表类型，会返回一个错误。
      * @param key
      * @param value
      * @return
@@ -714,7 +723,7 @@ public class CacheService extends CachingConfigurerSupport {
         return stringRedisTemplate.opsForList().rightPopAndLeftPush(sourceKey,
                 destinationKey, timeout, unit);
     }
-    
+
     /**
      * 删除集合中值等于value得元素
      *
@@ -1106,7 +1115,7 @@ public class CacheService extends CachingConfigurerSupport {
     public Set<String> zRange(String key, long start, long end) {
         return stringRedisTemplate.opsForZSet().range(key, start, end);
     }
-    
+
     /**
      * 获取zset集合的所有元素, 从小到大排序
      *
@@ -1397,7 +1406,7 @@ public class CacheService extends CachingConfigurerSupport {
         });
         return  keys;
     }
-    
+
     /**
      * 管道技术，提高性能
      * @param type
@@ -1442,26 +1451,40 @@ public class CacheService extends CachingConfigurerSupport {
      * @return
      */
     public String tryLock(String name, long expire) {
+        // 构建锁的名称，通过给名称添加后缀 "_lock" 来标识该 key 是一个锁
         name = name + "_lock";
-        String token = UUID.randomUUID().toString();
-        RedisConnectionFactory factory = stringRedisTemplate.getConnectionFactory();
-        RedisConnection conn = factory.getConnection();
-        try {
 
-            //参考redis命令：
-            //set key value [EX seconds] [PX milliseconds] [NX|XX]
+        // 生成一个唯一的标识符，用于标识锁的持有者。UUID 确保标识符唯一。
+        String token = UUID.randomUUID().toString();
+
+        // 获取 Redis 连接工厂，用于获取 Redis 连接
+        RedisConnectionFactory factory = stringRedisTemplate.getConnectionFactory();
+
+        // 获取 Redis 连接，用于执行底层的 Redis 命令操作
+        RedisConnection conn = factory.getConnection();
+
+        try {
+            // 使用 try-finally 确保连接可以正确释放，即使中间发生异常也不会影响连接的关闭
+
+            // 参考 Redis 命令：set key value [EX seconds] [PX milliseconds] [NX|XX]
+            // 尝试获取锁
             Boolean result = conn.set(
-                    name.getBytes(),
-                    token.getBytes(),
-                    Expiration.from(expire, TimeUnit.MILLISECONDS),
-                    RedisStringCommands.SetOption.SET_IF_ABSENT //NX
+                    name.getBytes(),                                 // 锁的名称，以字节数组的形式传入
+                    token.getBytes(),                                // 锁的值，即唯一标识符 token
+                    Expiration.from(expire, TimeUnit.MILLISECONDS),  // 设置锁的过期时间，单位为毫秒
+                    RedisStringCommands.SetOption.SET_IF_ABSENT      // 设置选项为 NX，即仅当键不存在时设置（如果锁不存在时获取锁）
             );
+
+            // 如果获取锁成功，返回生成的唯一标识符 token
             if (result != null && result)
                 return token;
+
         } finally {
-            RedisConnectionUtils.releaseConnection(conn, factory,false);
+            // 无论锁是否获取成功，释放 Redis 连接，避免资源泄露
+            RedisConnectionUtils.releaseConnection(conn, factory, false);
         }
+
+        // 如果获取锁失败，返回 null 表示获取失败
         return null;
     }
-
 }

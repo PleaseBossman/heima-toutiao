@@ -10,5 +10,6 @@ import java.util.List;
 @Mapper
 public interface WmNewsMaterialMapper extends BaseMapper<WmNewsMaterial> {
 
+     //xml文件写的sql
      void saveRelations(@Param("materialIds") List<Integer> materialIds,@Param("newsId") Integer newsId, @Param("type")Short type);
 }

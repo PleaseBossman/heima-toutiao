@@ -20,10 +20,12 @@ import com.heima.wemedia.mapper.WmNewsMapper;
 import com.heima.wemedia.mapper.WmSensitiveMapper;
 import com.heima.wemedia.mapper.WmUserMapper;
 import com.heima.wemedia.service.WmNewsAutoScanService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,8 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+
+@RequiredArgsConstructor
 @Transactional
 public class WmNewsAutoScanServiceImpl implements WmNewsAutoScanService {
 
@@ -91,9 +95,19 @@ public class WmNewsAutoScanServiceImpl implements WmNewsAutoScanService {
     private boolean handleSensitiveScan(String content, WmNews wmNews) {
         boolean flag = true;
 
+        /**
+         * wmSensitives：这是一个集合（例如 List 或 Set），其中包含 WmSensitive 类型的对象。
+         * .stream()：将 wmSensitives 集合转换为一个 Stream 对象，便于使用流式处理方法对集合中的元素进行处理。
+         * .map(WmSensitive::getSensitives)：使用 map 方法将 WmSensitive 对象映射为 sensitives 字符串。WmSensitive::getSensitives 是一个方法引用，等同于 x -> x.getSensitives()，它会调用 WmSensitive 对象的 getSensitives 方法来获取 sensitives 字段值。
+         * .collect(Collectors.toList())：将流中的元素收集成一个 List<String>。Collectors.toList() 是一个终端操作，用于将处理后的元素收集为列表。
+         */
+        //获取所有的敏感词
         List<WmSensitive> wmSensitives = wmSensitiveMapper.selectList(Wrappers.<WmSensitive>lambdaQuery().select());
+        //`map` 是 `Stream` 中的一个中间操作，它会将流中的每个元素转换成另一种形式
         List<String> sensitivesstrings = wmSensitives.stream().map(WmSensitive::getSensitives).collect(Collectors.toList());
+        //初始化敏感词库
         SensitiveWordUtil.initMap(sensitivesstrings);
+        //查看文章中是否包含敏感词
         Map<String, Integer> map = SensitiveWordUtil.matchWords(content);
         if(map!=null&&map.size()>0){
             updateWmNews(wmNews,(short)2,"当前文章内容存在敏感词"+map );
@@ -104,6 +118,7 @@ public class WmNewsAutoScanServiceImpl implements WmNewsAutoScanService {
 
 
     @Autowired
+    @Qualifier("articleClient")
     private IArticleClient articleClient;
 
     @Autowired

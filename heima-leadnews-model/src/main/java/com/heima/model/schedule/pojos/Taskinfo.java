@@ -18,8 +18,11 @@ import java.util.Date;
  */
 @Data
 @TableName("taskinfo")
+//Taskinfo 类可能需要存储到数据库或者通过网络传输，因此实现了 Serializable 接口，以确保该对象能够被序列化和反序列化。
+//如果一个类不需要存储或通过网络传输，就不需要实现 Serializable 接口。
 public class Taskinfo implements Serializable {
 
+    //serialVersionUID 是 Java 序列化机制用来验证版本一致性的重要标识。当对象被序列化到文件或通过网络传输时，接收方（或重新加载方）会使用 serialVersionUID 来验证发送方和接收方的类是否兼容
     private static final long serialVersionUID = 1L;
 
     /**

@@ -118,7 +118,7 @@ public class WmNews implements Serializable {
     private Short enable;
     
      //状态枚举类
-    @Alias("WmNewsStatus")
+    @Alias("WmNewsStatus")//这个注解用于给枚举类取一个别名，便于在其他位置引用该类名
     public enum Status{
         NORMAL((short)0),SUBMIT((short)1),FAIL((short)2),ADMIN_AUTH((short)3),ADMIN_SUCCESS((short)4),SUCCESS((short)8),PUBLISHED((short)9);
         short code;

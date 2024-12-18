@@ -28,7 +28,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@Transactional
+@Transactional//保证业务一致性，失败业务回滚
 public class WmMaterialServiceImpl extends ServiceImpl<WmMaterialMapper, WmMaterial> implements WmMaterialService {
 
     @Autowired
@@ -36,27 +36,29 @@ public class WmMaterialServiceImpl extends ServiceImpl<WmMaterialMapper, WmMater
 
     /**
      * 图片上传
-     *
      * @param multipartFile
      * @return
      */
     @Override
     public ResponseResult uploadPicture(MultipartFile multipartFile) {
+        // 检查上传的文件是否为空或文件大小为0
         if(multipartFile == null ||multipartFile.getSize()==0){
             return ResponseResult.errorResult(AppHttpCodeEnum.PARAM_INVALID);
         }
+        // 生成唯一文件名，去除 `-` 符号以保证文件名唯一。
         String filename = UUID.randomUUID().toString().replace("-", "");
         String originalFilename = multipartFile.getOriginalFilename();
         String substring = originalFilename.substring(originalFilename.lastIndexOf("."));
         String fileId = null;
         try {
+            //将图片上传到 MinIO 文件存储中，并获取返回的文件路径
             fileId = fileStorageService.uploadImgFile("", filename + substring + "", multipartFile.getInputStream());
             log.info("上传图片到MinIO中，fileId:{}",fileId);
         } catch (IOException e) {
             e.printStackTrace();
             log.error("WmMaterialServiceImpl-上传文件失败");
         }
-        //3.保存到数据库中
+        //3.创建一个 WmMaterial 对象，保存图片的相关信息到数据库
         WmMaterial wmMaterial = new WmMaterial();
         wmMaterial.setUserId(WmThreadLocalUtil.getUser().getId());
         wmMaterial.setUrl(fileId);
@@ -70,8 +72,8 @@ public class WmMaterialServiceImpl extends ServiceImpl<WmMaterialMapper, WmMater
     /**
      * 素材列表
      *
-     * @param dto
-     * @return
+     * @param dto 查询条件，包括页码、每页条数和是否收藏的标识
+     * @return 返回分页的素材列表结果
      */
     @Override
     public ResponseResult findList(WmMaterialDto dto) {
@@ -96,8 +98,9 @@ public class WmMaterialServiceImpl extends ServiceImpl<WmMaterialMapper, WmMater
         page = page(page,lambdaQueryWrapper);
 
         //3.结果返回
+        //构建响应对象，并设置分页数据和查询结果
         ResponseResult responseResult = new PageResponseResult(dto.getPage(),dto.getSize(),(int)page.getTotal());
-        responseResult.setData(page.getRecords());
+        responseResult.setData(page.getRecords());// 设置查询到的素材记录
         return responseResult;
     }
 }

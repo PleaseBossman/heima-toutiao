@@ -122,6 +122,8 @@ public class WmNewsServiceImpl extends ServiceImpl<WmNewsMapper, WmNews> impleme
         //封面图片  list---> string
         if(dto.getImages() != null && dto.getImages().size() > 0){
             //[1dddfsd.jpg,sdlfjldk.jpg]-->   1dddfsd.jpg,sdlfjldk.jpg
+            //StringUtils.join(dto.getImages(), ",") 将列表中的每个元素用逗号 ( , ) 连接起来
+            //生成的String将如下所示： "img1.jpg,img2.jpg,img3.jpg"
             String imageStr = StringUtils.join(dto.getImages(), ",");
             wmNews.setImages(imageStr);
         }
@@ -181,6 +183,10 @@ public class WmNewsServiceImpl extends ServiceImpl<WmNewsMapper, WmNews> impleme
             }else if(materials.size() >= 1 && materials.size() < 3){
                 //单图
                 wmNews.setType(WemediaConstants.WM_NEWS_SINGLE_IMAGE);
+                //materials ：这是包含一组项目（例如，图像或其他媒体项目的 URL）的原始List<String> 。
+                //materials.stream() ：将materials转换为流，从而可以使用各种操作来处理元素。
+                //limit(1) ：这是一个中间流操作，它将流限制为仅第一项。如果materials有多个项目，则只有第一个项目将包含在进一步处理中。如果materials少于一项，则生成的流将为空。
+                //collect(Collectors.toList()) ：此终端操作将流中的剩余元素收集到新列表中。在这里，它将创建一个仅包含materials的第一个元素的列表。
                 images = materials.stream().limit(1).collect(Collectors.toList());
             }else {
                 //无图
@@ -249,7 +255,8 @@ public class WmNewsServiceImpl extends ServiceImpl<WmNewsMapper, WmNews> impleme
      */
     private List<String> ectractUrlInfo(String content) {
         List<String> materials = new ArrayList<>();
-
+        //它将 JSON 数组中的每个对象转换为一个Map ，其中的键和值是从 JSON 对象推断出来的。数组中的每个 JSON 对象都成为一个Map ，其中 JSON 键为String ，值为Object 。
+        //结果是一个List<Map> ，其中列表中的每个元素都是一个表示 JSON 数组中的对象之一的Map 。
         List<Map> maps = JSON.parseArray(content, Map.class);
         for (Map map : maps) {
             if(map.get("type").equals("image")){
@@ -311,12 +318,11 @@ public class WmNewsServiceImpl extends ServiceImpl<WmNewsMapper, WmNews> impleme
                 Map<String,Object> map = new HashMap<>();
                 map.put("articleId",wmNews.getArticleId());
                 map.put("enable",wmNews.getEnable());
+                //kafkaTemplate.send()方法将map （转换为 JSON 格式）发送到WM_NEWS_UP_OR_DOWN_TOPIC Kafka 主题。
+                // 此消息允许其他服务（例如，文章服务）接收有关文章enable状态的更新。
                 kafkaTemplate.send(WmNewsMessageConstants.WM_NEWS_UP_OR_DOWN_TOPIC,JSON.toJSONString(map));
             }
-
         }
-
-
         return ResponseResult.okResult(AppHttpCodeEnum.SUCCESS);
     }
 
